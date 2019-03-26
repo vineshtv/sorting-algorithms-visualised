@@ -3,7 +3,7 @@ var sortHistory = [];
 var completed = false;
 var sorted = false;
 var sortAlgo = 'bubble';
-//var sortAlgo = 'heapsort';
+//var sortAlgo = 'bitsort';
 var comps = 0;
 
 function setup() {
@@ -98,7 +98,7 @@ function selectionSort() {
     console.log('Total comparisons: ', comps);
 }
 
-function merge(l, m , r) {
+function merge1(l, m , r) {
     var n1 = m - l + 1;
     var n2 = r - m;
 
@@ -138,6 +138,41 @@ function merge(l, m , r) {
         arr[k] = R[j];
         j++;
         k++;
+    }
+    sortHistory.push(arr.slice());
+}
+
+function merge(start, mid, end) {
+    var start2 = mid + 1;
+
+    if(arr[mid] <= arr[start2]) {
+        return;
+    }
+
+    while(start <= mid && start2 <= end){
+        if(arr[start] <= arr[start2]){
+            start++;
+        } else {
+            var value = arr[start2];
+            var index = start2;
+
+            while(index != start){
+                comps++;
+                arr[index] = arr[index - 1];
+                index--;
+
+                if(comps % 25 == 0){
+                    sortHistory.push(arr.slice());
+                }
+            }
+
+            arr[start] = value;
+            sortHistory.push(arr.slice());
+
+            start++;
+            mid++;
+            start2++;
+        }
     }
     sortHistory.push(arr.slice());
 }
@@ -232,6 +267,48 @@ function heapsort(){
     }
 }
 
+function bitsortPartition(low, high, msbBitPos) {
+    var mask = ~(1 << (msbBitPos - 1));
+    var i = low;
+    var j = high;
+
+    while (i < j){
+        while((arr[i] | mask) == mask){
+            i++;
+            if (i > high){
+                break;
+            }
+        }
+
+        while((arr[j] | mask) != mask){
+            j--;
+            if(j < low){
+                break;
+            }
+        }
+
+        if (i <= j){
+            swap(arr, i, j);
+            sortHistory.push(arr.slice());
+        }
+    }
+
+    return i - 1;
+}
+
+function bitsort(low, high, msbBitPos){
+    if(msbBitPos == 0) {
+        return;
+    }
+
+    if(low < high) {
+        var x = bitsortPartition(low, high, msbBitPos);
+
+        bitsort(low, x, msbBitPos - 1);
+        bitsort(x + 1, high, msbBitPos - 1);
+    }
+}
+
 function draw() {
     background(0);
     stroke(200);
@@ -248,10 +325,12 @@ function draw() {
             selectionSort();
         } else if (sortAlgo == 'merge') {
             console.log('Merge Sort');
+            console.log(arr);
             mergeSort(0, arr.length - 1);
             sortHistory.push(arr.slice());
             sorted = true;
             console.log(sortHistory.length);
+            console.log(arr);
         } else if (sortAlgo == 'quicksort') {
             console.log('Quicksort');
             quicksort(0, arr.length - 1);
@@ -260,6 +339,10 @@ function draw() {
         } else if (sortAlgo == 'heapsort') {
             console.log('Heapsort');
             heapsort();
+            sortHistory.push(arr.slice());
+            sorted = true;
+        } else if (sortAlgo == 'bitsort') {
+            bitsort(0, arr.length - 1, 9);
             sortHistory.push(arr.slice());
             sorted = true;
         }
@@ -288,6 +371,8 @@ function draw() {
         } else if (sortAlgo == 'quicksort') {
             sortAlgo = 'heapsort';
         } else if (sortAlgo == 'heapsort') {
+            sortAlgo = 'bitsort';
+        } else if (sortAlgo == 'bitsort'){
             noLoop();
         }
 
